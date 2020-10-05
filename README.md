@@ -27,7 +27,7 @@ To use Plugins in Domoticz please read : https://www.domoticz.com/wiki/Using_Pyt
 
 
 # Current status commands:
-
+```
 SetHeatpump			Set heatpump on or off	0=off, 1=on					tested	
 SetHolidayMode			Set holiday mode on or off	0=off, 1=on				Not implemented (yet)	
 SetQuietMode			Set quiet mode level	0, 1, 2 or 3					tested	
@@ -42,7 +42,7 @@ SetForceDHW			Forces DHW (Operating mode should be firstly set to one with DWH m
 SetDHWTemp			Set DHW target temperature	40 - 75					not tested
 SetForceDefrost			Forces defrost routine	0, 1						not tested	
 SetForceSterilization		Forces DHW sterilization routine	0, 1				not tested	
-
+```
 
 # ToDo:
 - Add SetHolidayMode
