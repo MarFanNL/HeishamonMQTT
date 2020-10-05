@@ -2,6 +2,9 @@
 Simple plugin to manage Heishamon through MQTT
 
 ```
+-- Beta -- 
+This version is still in Beta release. Doc in progress
+
 This plugin is able to read and to control the Panasonic using the Heishamon module.
 ```
 
