@@ -1,6 +1,10 @@
 # HeishamonMQTT
 Simple plugin to manage Heishamon through MQTT
 
+```
+This plugin is able to read and to control the Panasonic using the Heishamon module.
+```
+
 # Prerequisites
 To use Plugins in Domoticz please read : https://www.domoticz.com/wiki/Using_Python_plugins
 
