@@ -259,7 +259,7 @@ class BasePlugin:
 
         if (devname in self.command_switch_devices ):
          try: 
-            if (Command == 'off'):
+            if (Command == 'Off'):
              Level = 0
             else:
              Level = 1          
