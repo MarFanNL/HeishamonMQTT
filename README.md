@@ -61,4 +61,6 @@ Version 0.1.3 ->
 		- Check SetDHWTemp to be in range 40 to 75
 		- Force_DHW_State only on/off (no unknown anymore)
 Version 0.1.4 -> Fix: Switch only publish On (1) not Off (0) in MQTT
+Version 0.1.5 -> Implemented S0 Support (2 devices)
+
 ```
