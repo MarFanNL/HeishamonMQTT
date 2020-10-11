@@ -62,5 +62,9 @@ Version 0.1.3 ->
 		- Force_DHW_State only on/off (no unknown anymore)
 Version 0.1.4 -> Fix: Switch only publish On (1) not Off (0) in MQTT
 Version 0.1.5 -> Implemented S0 Support (2 devices)
+Version 0.1.6 -> No change
+Version 0.1.7 -> Use MQTT for S0 (panasonic_heat_pump/s0/Watt/x)
+
+
 
 ```
