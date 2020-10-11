@@ -337,36 +337,38 @@ class BasePlugin:
        
         #------------------ S0 ------------------------------------------------
         #----------------------------------------------------------------------
+        # MQTT message --> panasonic_heat_pump/s0/Watt/1
         if ( (mqttpath[0] == self.base_topic) and (mqttpath[1] == 'S0') ):
-         Domoticz.Debug("MQTT S0 message: " + topic + " " + str(message))
-         unitname = mqttpath[1] + '_' + mqttpath[2]
+         #Domoticz.Debug("MQTT S0 message: " + topic + " " + str(message))
+         unitname = mqttpath[1] + '_' + mqttpath[3]
          unitname = unitname.strip()
          Domoticz.Debug("MQTT S0 message: " + topic + " " + str(message) + ' ' + unitname)
-         iUnit = getDevice(unitname)         
-         if iUnit<0: # if device does not exists in Domoticz, than create it
-          iUnit = createDevice(unitname, "kWh")
-          if iUnit<0:
-           return False           
-         try:
-          curval = Devices[iUnit].sValue
-          prevdata = curval.split(";")
-         except:
-          prevdata = []
-         if len(prevdata)<2:
-          prevdata.append(0)
-          prevdata.append(0)
-         try:
-          mval = float(str(message).strip())
-         except:
-          mval = str(message).strip()
-          sval = ""
-         sval = str(mval)+";"+str(prevdata[1])
-         try:
-          if sval!="":
-           Devices[iUnit].Update(nValue=0,sValue=str(sval))
-         except Exception as e:
-          Domoticz.Debug(str(e))
-          return True     
+         if (mqttpath[2] == 'Watt') :   
+          iUnit = getDevice(unitname)         
+          if iUnit<0: # if device does not exists in Domoticz, than create it
+           iUnit = createDevice(unitname, "kWh")
+           if iUnit<0:
+            return False           
+          try:
+           curval = Devices[iUnit].sValue
+           prevdata = curval.split(";")
+          except:
+           prevdata = []
+          if len(prevdata)<2:
+           prevdata.append(0)
+           prevdata.append(0)
+          try:
+           mval = float(str(message).strip())
+          except:
+           mval = str(message).strip()
+           sval = ""
+          sval = str(mval)+";"+str(prevdata[1])
+          try:
+           if sval!="":
+            Devices[iUnit].Update(nValue=0,sValue=str(sval))
+          except Exception as e:
+           Domoticz.Debug(str(e))
+           return True     
          
         #------------------ SDC ----------------------------------------------
         #---------------------------------------------------------------------
