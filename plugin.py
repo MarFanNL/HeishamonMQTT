@@ -339,7 +339,7 @@ class BasePlugin:
         #----------------------------------------------------------------------
         # MQTT message --> panasonic_heat_pump/s0/Watt/1
         if ( (mqttpath[0] == self.base_topic) and (mqttpath[1] == 'S0') ):
-         #Domoticz.Debug("MQTT S0 message: " + topic + " " + str(message))
+         Domoticz.Debug("--> MQTT S0 message:: " + topic + " " + str(message))
          unitname = mqttpath[1] + '_' + mqttpath[3]
          unitname = unitname.strip()
          Domoticz.Debug("MQTT S0 message: " + topic + " " + str(message) + ' ' + unitname)
