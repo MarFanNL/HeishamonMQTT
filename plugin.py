@@ -1,5 +1,5 @@
 """
-<plugin key="HeishamonMQTT" name="Heishamon MQTT" version="0.1.7">
+<plugin key="HeishamonMQTT" name="Heishamon MQTT" version="0.1.8">
     <description>
       Simple plugin to manage Heishamon through MQTT
       <br/>
