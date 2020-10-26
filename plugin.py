@@ -1,5 +1,5 @@
 """
-<plugin key="HeishamonMQTT" name="Heishamon MQTT" version="0.1.7">
+<plugin key="HeishamonMQTT" name="Heishamon MQTT" version="0.1.8">
     <description>
       Simple plugin to manage Heishamon through MQTT
       <br/>
@@ -9,6 +9,7 @@
         <param field="Port" label="Port" width="300px" required="true" default="1883"/>
         <param field="Username" label="Username" width="300px"/>
         <param field="Password" label="Password" width="300px" default="" password="true"/>
+        <param field="Mode1" label="Base topic" width="300px" required="true" default="panasonic_heat_pump"/>
         <param field="Mode6" label="Debug" width="75px">
             <options>
                 <option label="Verbose" value="Verbose"/>
@@ -205,7 +206,7 @@ class BasePlugin:
             Domoticz.Debugging(2+4+8+16+64)
         if self.debugging == "Debug":
             Domoticz.Debugging(2)
-        self.base_topic = "panasonic_heat_pump" # hardwired
+        self.base_topic = Parameters["Mode1"].strip()
         self.mqttserveraddress = Parameters["Address"].strip()
         self.mqttserverport = Parameters["Port"].strip()
         self.mqttClient = MqttClientSH2(self.mqttserveraddress, self.mqttserverport, "", self.onMQTTConnected, self.onMQTTDisconnected, self.onMQTTPublish, self.onMQTTSubscribed)
