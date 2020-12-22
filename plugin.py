@@ -244,7 +244,7 @@ class BasePlugin:
         if ( devname in self.command_sel_devices ):
          try:           
             cmd = int(Level / 10)
-            mqttpath = self.base_topic+"/" + getSelCommand(devname)         
+            mqttpath = self.base_topic+"/commands/" + getSelCommand(devname)         
             self.mqttClient.publish(mqttpath, str(cmd) )
          except Exception as e:
           Domoticz.Debug(str(e))
@@ -252,7 +252,7 @@ class BasePlugin:
 
         if (devname in self.thermostat_devices ):
          try: 
-            mqttpath = self.base_topic+"/" + getSelCommand(devname)         
+            mqttpath = self.base_topic+"/commands/" + getSelCommand(devname)         
             self.mqttClient.publish(mqttpath, str(Level) )
          except Exception as e:
           Domoticz.Debug(str(e))
@@ -264,7 +264,7 @@ class BasePlugin:
              Level = 0
             else:
              Level = 1          
-            mqttpath = self.base_topic + "/" + getSelCommand(devname)         
+            mqttpath = self.base_topic + "/commands/" + getSelCommand(devname)         
             self.mqttClient.publish(mqttpath, str(Level) )
          except Exception as e:
           Domoticz.Debug(str(e))
@@ -373,8 +373,8 @@ class BasePlugin:
          
         #------------------ SDC ----------------------------------------------
         #---------------------------------------------------------------------
-        if ( (mqttpath[0] == self.base_topic) and (mqttpath[1] == 'sdc') ):
-         #Domoticz.Debug("MQTT sdc message: " + topic + " " + str(message))
+        if ( (mqttpath[0] == self.base_topic) and (mqttpath[1] == 'main') ):
+         #Domoticz.Debug("MQTT main message: " + topic + " " + str(message))
          unitname = mqttpath[2]
          unitname = unitname.strip()
 
