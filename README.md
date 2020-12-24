@@ -62,7 +62,7 @@ Version 0.1.5 -> Implemented S0 Support (2 devices)
 Version 0.1.6 -> No change
 Version 0.1.7 -> Use MQTT for S0 (panasonic_heat_pump/s0/Watt/x)
 Version 0.1.8 -> Allow mqtt base topic to be set 
-Version 0.1.9 -> Heishamon v1.0 (for older version of Heishamon take 0.1.8)
+Version 0.1.9 -> Heishamon v1.0 + Zone (for older version of Heishamon take 0.1.8) 
 
 
 ```
