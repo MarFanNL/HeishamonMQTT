@@ -1,5 +1,5 @@
 """
-<plugin key="HeishamonMQTT" name="Heishamon MQTT" version="0.1.8">
+<plugin key="HeishamonMQTT" name="Heishamon MQTT" version="0.1.9">
     <description>
       Simple plugin to manage Heishamon through MQTT
       <br/>
@@ -91,7 +91,8 @@ def getSelCommand(pUnitname):
         "Z1_Cool_Request_Temp": "SetZ1CoolRequestTemperature",
         "Z2_Heat_Request_Temp": "SetZ2HeatRequestTemperature",
         "Z2_Cool_Request_Temp": "SetZ2CoolRequestTemperature", 
-        "DHW_Target_Temp": "SetDHWTemp"
+        "DHW_Target_Temp": "SetDHWTemp",
+        "Zones_State": "SetZones"        
         }
     return Switcher.get(pUnitname, "")
     
@@ -104,7 +105,8 @@ def getSelSwitchLevelNames(pUnitname):
         "ThreeWay_Valve_State": "Room|DWH",
         "Holiday_Mode_State": "Off|Scheduled|Active",
         "Cooling_Mode": "Curve|Direct",
-        "Heating_Mode": "Curve|Direct"
+        "Heating_Mode": "Curve|Direct",
+        "Zones_State": "Zone 1|Zone 2|Zone 1+2"
         }
     return Switcher.get(pUnitname, "")
 
@@ -117,7 +119,8 @@ def getSelSwitchImage(pUnitname):
         "ThreeWay_Valve_State": 11,
         "Holiday_Mode_State": 19,
         "Cooling_Mode": 16,
-        "Heating_Mode": 15
+        "Heating_Mode": 15,
+        "Zones_State": 0        
         }
     return Switcher.get(pUnitname, "")
     
@@ -178,7 +181,7 @@ class BasePlugin:
     thermostat_devices = ["Z1_Heat_Request_Temp", "Z1_Cool_Request_Temp", "Z2_Heat_Request_Temp", "Z2_Cool_Request_Temp", "DHW_Target_Temp"]
     switch_devices = ["Quiet_Mode_Schedule", "Main_Schedule_State", "Force_Heater_State", "DHW_Heater_State", "Room_Heater_State", "External_Heater_State", "Internal_Heater_State"]
     command_switch_devices = ["Heatpump_State", "Defrosting_State", "Sterilization_State"]
-    command_sel_devices = ["Force_DHW_State", "Quiet_Mode_Level", "Powerful_Mode_Time", "Operating_Mode_State"]   
+    command_sel_devices = ["Force_DHW_State", "Quiet_Mode_Level", "Powerful_Mode_Time", "Operating_Mode_State", "Zones_State"]   
     sel_switch_devices = [ "ThreeWay_Valve_State", "Holiday_Mode_State", "Cooling_Mode","Heating_Mode"]       
     kWh_devices =["Cool_Energy_Consumption", "Cool_Energy_Production", "DHW_Energy_Consumption", "DHW_Energy_Production", "Heat_Energy_Consumption", "Heat_Energy_Production"]
     counter_devices = ["Operations_Counter", "Operations_Hours", "DHW_Heater_Operations_Hours", "Room_Heater_Operations_Hours", "Sterilization_Max_Time"] 
@@ -340,7 +343,7 @@ class BasePlugin:
         #----------------------------------------------------------------------
         # MQTT message --> panasonic_heat_pump/s0/Watt/1
         if ( (mqttpath[0] == self.base_topic) and (mqttpath[1] == 's0') ):
-         Domoticz.Debug("--> MQTT S0 message:: " + topic + " " + str(message))
+         #Domoticz.Debug("--> MQTT S0 message:: " + topic + " " + str(message))
          unitname = mqttpath[1] + '_' + mqttpath[3]
          unitname = unitname.strip()
          Domoticz.Debug("MQTT S0 message: " + topic + " " + str(message) + ' ' + unitname)
@@ -371,7 +374,7 @@ class BasePlugin:
            Domoticz.Debug(str(e))
            return True     
          
-        #------------------ SDC ----------------------------------------------
+        #------------------ MAIN----------------------------------------------
         #---------------------------------------------------------------------
         if ( (mqttpath[0] == self.base_topic) and (mqttpath[1] == 'main') ):
          #Domoticz.Debug("MQTT main message: " + topic + " " + str(message))
