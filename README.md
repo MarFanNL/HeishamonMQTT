@@ -26,7 +26,7 @@ To use Plugins in Domoticz please read : https://www.domoticz.com/wiki/Using_Pyt
 # Current status commands:
 ```
 SetHeatpump			Set heatpump on or off	0=off, 1=on					tested	
-SetHolidayMode			Set holiday mode on or off	0=off, 1=on				Not implemented (yet)	
+SetHolidayMode			Set holiday mode on or off	0=off, 1=on				not tested
 SetQuietMode			Set quiet mode level	0, 1, 2 or 3					tested	
 SetPowerfulMode			Set powerful mode run time in minutes	0=off, 1=30, 2=60 or 3=90	tested	
 SetZ1HeatRequestTemperature	Set Z1 heat shift or direct heat temperature	-5 to 5 or 20 to max	tested
@@ -35,16 +35,17 @@ SetZ2HeatRequestTemperature	Set Z2 heat shift or direct heat temperature	-5 to 5
 SetZ2CoolRequestTemperature	Set Z2 cool shift or direct cool temperature	-5 to 5 or 20 to max	not tested
 SetOperationMode		Sets operating mode	0=Heat only, 1=Cool only, 2=Auto, 3=DHW only
 				, 4=Heat+DHW, 5=Cool+DHW, 6=Auto+DHW					not tested	
-SetForceDHW			Forces DHW (Operating mode should be firstly set to one with DWH mode (3,4,5 or 6) to be effective. Plese look at SET9 )	0, 1	not tested	
+SetForceDHW			Forces DHW (Operating mode should be firstly set to one with DWH mode (3,4,5 or 6) to be effective. Please look at SET9 )	0, 1	not tested	
 SetDHWTemp			Set DHW target temperature	40 - 75					not tested
 SetForceDefrost			Forces defrost routine	0, 1						not tested	
 SetForceSterilization		Forces DHW sterilization routine	0, 1				not tested	
+SetZones                        Set zones to active  0 = zone 1 active, 1 = zone2 active, 2 = zone1 and zone2 active  tested                      
 ```
 
 # ToDo:
-- Add SetHolidayMode
 - Check ForceDHW for correct operation mode
 - Add influxDB support
+- SetPump / SetPumpSpeed / SetCurves / SetFloorHeatDelta / SetFloorCoolDelta / SetDWHHeatDelta
 
 
 # History
@@ -63,6 +64,9 @@ Version 0.1.6 -> No change
 Version 0.1.7 -> Use MQTT for S0 (panasonic_heat_pump/s0/Watt/x)
 Version 0.1.8 -> Allow mqtt base topic to be set 
 Version 0.1.9 -> Heishamon v1.0 + Zone (for older version of Heishamon take 0.1.8) 
-
+Version 0.2.0 -> 
+		- Change Error from Text to Alert
+		- Add Heat Pump Model
+		- Add Pump Duty		- 
 
 ```
