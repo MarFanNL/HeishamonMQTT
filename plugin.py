@@ -204,10 +204,6 @@ class BasePlugin:
       try:
         Domoticz.Heartbeat(10)
 
-
-
-
-
         self.wattHourTotal = 0
         self.debugging = Parameters["Mode6"]
         if self.debugging == "Verbose":
@@ -442,7 +438,7 @@ class BasePlugin:
          
          # ------------------  Defrost Counter------------------------------------
          # ----------------------------------------------------------------------- 
-         if ( ( unitname == "Heatpump_State" ) ):        
+         if ( ( unitname == "Defrosting_State" ) ):        
           try:
             scmd = str(message).strip().lower()                        
             curval = ("0", "1") [(Devices[iUnit].sValue)=="On"]
