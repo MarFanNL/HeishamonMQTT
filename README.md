@@ -67,5 +67,11 @@ Version 0.2.0 ->
 		- Change Error from Text to Alert
 		- Add Heat Pump Model
 		- Add Pump Duty		- 
+Version 0.2.0 -> 
+		- Added WattHourTotal to S0 (General,kWh)
+		- Added Defrost Counter
+		- Detect old Heishamon Firmware
+		- Code cleanup
+		
 
 ```
