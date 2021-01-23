@@ -223,6 +223,7 @@ class BasePlugin:
         iUnit = getDevice('Defrost_Counter')         
         if iUnit<0: # if device does not exists in Domoticz, than create it
          iUnit = createDevice('Defrost_Counter', "Counter")  
+        Devices[iUnit].Update(nValue=0,sValue=str(0))   
         
       except Exception as e:
         Domoticz.Error("MQTT client start error: "+str(e))
@@ -324,8 +325,6 @@ class BasePlugin:
          return False 
         mqttpath = topic.split('/')      
         
-
-
         if ( (mqttpath[0] == self.base_topic) and (mqttpath[1] == 'sdc') ):
          Domoticz.Debug("!! Heishamon firmware < V1.0 !! Please update the firmware or use the plugin verision 0.1.8")
 
