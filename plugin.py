@@ -1,5 +1,5 @@
 """
-<plugin key="HeishamonMQTT" name="Heishamon MQTT" version="0.1.8">
+<plugin key="HeishamonMQTT" name="Heishamon MQTT" version="0.2.1">
     <description>
       Simple plugin to manage Heishamon through MQTT
       <br/>
@@ -76,8 +76,8 @@ def calcCOP(pUnitname):
     
  except Exception as e:
   Domoticz.Debug(str(e))  
-     
- 
+      
+
 def getSelCommand(pUnitname):
     Switcher={
         "Quiet_Mode_Level": "SetQuietMode",
@@ -91,7 +91,9 @@ def getSelCommand(pUnitname):
         "Z1_Cool_Request_Temp": "SetZ1CoolRequestTemperature",
         "Z2_Heat_Request_Temp": "SetZ2HeatRequestTemperature",
         "Z2_Cool_Request_Temp": "SetZ2CoolRequestTemperature", 
-        "DHW_Target_Temp": "SetDHWTemp"
+        "DHW_Target_Temp": "SetDHWTemp",
+        "Zones_State": "SetZones" ,
+        "Holiday_Mode_State": "SetHolidayMode"
         }
     return Switcher.get(pUnitname, "")
     
@@ -104,7 +106,8 @@ def getSelSwitchLevelNames(pUnitname):
         "ThreeWay_Valve_State": "Room|DWH",
         "Holiday_Mode_State": "Off|Scheduled|Active",
         "Cooling_Mode": "Curve|Direct",
-        "Heating_Mode": "Curve|Direct"
+        "Heating_Mode": "Curve|Direct",
+        "Zones_State": "Zone 1|Zone 2|Zone 1+2"
         }
     return Switcher.get(pUnitname, "")
 
@@ -117,7 +120,8 @@ def getSelSwitchImage(pUnitname):
         "ThreeWay_Valve_State": 11,
         "Holiday_Mode_State": 19,
         "Cooling_Mode": 16,
-        "Heating_Mode": 15
+        "Heating_Mode": 15,
+         "Zones_State": 0    
         }
     return Switcher.get(pUnitname, "")
     
@@ -149,14 +153,16 @@ def createDevice(pUnitname, pTypeName, pOptions=''):
      Domoticz.Device(Name=pUnitname, Unit=iUnit, Type=243, Subtype=31, Used=0, Options={"Custom": "1;R/Min"}, Image=7,DeviceID=pUnitname).Create() # create Speed counter
   elif (pTypeName=="Text"):     
      Domoticz.Device(Name=pUnitname, Unit=iUnit, Type=243, Subtype=19, Used=0,DeviceID=pUnitname).Create() # create text device
+  elif (pTypeName=="Alert"):     
+     Domoticz.Device(Name=pUnitname, Unit=iUnit, Type=243, Subtype=22, Used=0,DeviceID=pUnitname).Create() # create alert device     
   elif (pTypeName=="COP"):     
-     Domoticz.Device(Name=pUnitname, Unit=iUnit, Type=243, Subtype=31, Used=0, Options={"Custom": "1;COP"}, DeviceID=pUnitname).Create() # create Speed counter    
+     Domoticz.Device(Name=pUnitname, Unit=iUnit, Type=243, Subtype=31, Used=0, Options={"Custom": "1;COP"}, DeviceID=pUnitname).Create() # create COP    
   elif (pTypeName=="Pressure"):          
      Domoticz.Device(Name=pUnitname, Unit=iUnit, Type=243, Subtype=9, Used=0, DeviceID=pUnitname).Create() # create Pressure counter  
   elif (pTypeName=="Kelvin"):     
      Domoticz.Device(Name=pUnitname, Unit=iUnit, Type=243, Subtype=31, Used=0, Options={"Custom": "1;K"},  DeviceID=pUnitname).Create() # create Kelvin counter  
   elif (pTypeName=="Flow"):     
-     Domoticz.Device(Name=pUnitname, Unit=iUnit, Type=243, Subtype=30, Used=0, DeviceID=pUnitname).Create() # create Kelvin counter
+     Domoticz.Device(Name=pUnitname, Unit=iUnit, Type=243, Subtype=30, Used=0, DeviceID=pUnitname).Create() # create Flow counter
   elif (pTypeName=="Current"):     
      Domoticz.Device(Name=pUnitname, Unit=iUnit, Type=243, Subtype=23, Used=0, DeviceID=pUnitname).Create() # 
   elif (pTypeName=="Freq"):     
@@ -177,15 +183,16 @@ class BasePlugin:
     
     thermostat_devices = ["Z1_Heat_Request_Temp", "Z1_Cool_Request_Temp", "Z2_Heat_Request_Temp", "Z2_Cool_Request_Temp", "DHW_Target_Temp"]
     switch_devices = ["Quiet_Mode_Schedule", "Main_Schedule_State", "Force_Heater_State", "DHW_Heater_State", "Room_Heater_State", "External_Heater_State", "Internal_Heater_State"]
-    command_switch_devices = ["Heatpump_State", "Defrosting_State", "Sterilization_State"]
-    command_sel_devices = ["Force_DHW_State", "Quiet_Mode_Level", "Powerful_Mode_Time", "Operating_Mode_State"]   
+    command_switch_devices = ["Heatpump_State", "Defrosting_State", "Sterilization_State", "Holiday_Mode_State"]
+    command_sel_devices = ["Force_DHW_State", "Quiet_Mode_Level", "Powerful_Mode_Time", "Operating_Mode_State", "Zones_State"]     
     sel_switch_devices = [ "ThreeWay_Valve_State", "Holiday_Mode_State", "Cooling_Mode","Heating_Mode"]       
     kWh_devices =["Cool_Energy_Consumption", "Cool_Energy_Production", "DHW_Energy_Consumption", "DHW_Energy_Production", "Heat_Energy_Consumption", "Heat_Energy_Production"]
-    counter_devices = ["Operations_Counter", "Operations_Hours", "DHW_Heater_Operations_Hours", "Room_Heater_Operations_Hours", "Sterilization_Max_Time"] 
+    counter_devices = ["Operations_Counter", "Operations_Hours", "DHW_Heater_Operations_Hours", "Room_Heater_Operations_Hours", "Sterilization_Max_Time", "Pump_Duty", "Defrost_Counter"] 
     speed_devices = ["Pump_Speed", "Fan1_Motor_Speed", "Fan2_Motor_Speed"]   
     pressure_devices = ["Low_Pressure", "High_Pressure"]   
     kelvin_devices = ["Cool_Delta", "DHW_Heat_Delta", "Heat_Delta"]
-    text_devices = ["Error"]
+    text_devices = ["Heat_Pump_Model"]
+    alert_devices = ["Error"]
     COP_devices = ["Cool_Energy_COP", "DHW_Energy_COP", "Heat_Energy_COP"]
     
     def __init__(self):
@@ -196,11 +203,8 @@ class BasePlugin:
      if errmsg =="":
       try:
         Domoticz.Heartbeat(10)
-        self.homebridge = Parameters["Mode2"]
-        try:
-         self.powerread  = int(Parameters["Mode3"])
-        except:
-         self.powerread  = 0
+
+        self.wattHourTotal = 0
         self.debugging = Parameters["Mode6"]
         if self.debugging == "Verbose":
             Domoticz.Debugging(2+4+8+16+64)
@@ -215,6 +219,11 @@ class BasePlugin:
          iUnit = getDevice(dev)         
          if iUnit<0: # if device does not exists in Domoticz, than create it
           iUnit = createDevice(dev, "COP")  
+        
+        iUnit = getDevice('Defrost_Counter')         
+        if iUnit<0: # if device does not exists in Domoticz, than create it
+         iUnit = createDevice('Defrost_Counter', "Counter")  
+        Devices[iUnit].Update(nValue=0,sValue=str(0))   
         
       except Exception as e:
         Domoticz.Error("MQTT client start error: "+str(e))
@@ -241,6 +250,7 @@ class BasePlugin:
          Domoticz.Debug(str(e))
          return False
         Domoticz.Debug("DevName: " + devname + " Command: " + Command + " " + str(Level) )                       
+
         if ( devname in self.command_sel_devices ):
          try:           
             cmd = int(Level / 10)
@@ -314,14 +324,15 @@ class BasePlugin:
          Domoticz.Debug("MQTT message is not a valid string!") #if message is not a real string, drop it
          return False 
         mqttpath = topic.split('/')      
+        
+        if ( (mqttpath[0] == self.base_topic) and (mqttpath[1] == 'sdc') ):
+         Domoticz.Debug("!! Heishamon firmware < V1.0 !! Please update the firmware or use the plugin verision 0.1.8")
 
-        #------------------ 1Wire ---------------------------------------------
-        #----------------------------------------------------------------------
         if ( (mqttpath[0] == self.base_topic) and (mqttpath[1] == '1wire') ):
          #Domoticz.Debug("MQTT 1wire message: " + topic + " " + str(message))
          unitname = mqttpath[2]
-         unitname = unitname.strip()
-         #Domoticz.Debug("MQTT 1wire message: " + topic + " " + str(message) + ' ' + unitname)
+         unitname = unitname.strip()         
+
          iUnit = getDevice(unitname)         
          if iUnit<0: # if device does not exists in Domoticz, than create it
           iUnit = createDevice(unitname, "Temperature")
@@ -335,15 +346,21 @@ class BasePlugin:
            Devices[iUnit].Update(nValue=0,sValue=str(mval))
          except Exception as e:
            Domoticz.Debug(str(e))
-       
+             
+        
         #------------------ S0 ------------------------------------------------
         #----------------------------------------------------------------------
         # MQTT message --> panasonic_heat_pump/s0/Watt/1
         if ( (mqttpath[0] == self.base_topic) and (mqttpath[1] == 's0') ):
-         Domoticz.Debug("--> MQTT S0 message:: " + topic + " " + str(message))
+
          unitname = mqttpath[1] + '_' + mqttpath[3]
          unitname = unitname.strip()
-         Domoticz.Debug("MQTT S0 message: " + topic + " " + str(message) + ' ' + unitname)
+         if (mqttpath[2] == 'WatthourTotal') :          
+          try:
+           self.wattHourTotal = float(str(message).strip())
+          except:
+           Domoticz.Debug("Exception in s0/WatthourTotal " + str(message) + ' ' + unitname)          
+
          if (mqttpath[2] == 'Watt') :   
           iUnit = getDevice(unitname)         
           if iUnit<0: # if device does not exists in Domoticz, than create it
@@ -363,7 +380,9 @@ class BasePlugin:
           except:
            mval = str(message).strip()
            sval = ""
-          sval = str(mval)+";"+str(prevdata[1])
+
+          sval = str(mval)+";"+str(self.wattHourTotal)
+
           try:
            if sval!="":
             Devices[iUnit].Update(nValue=0,sValue=str(sval))
@@ -371,7 +390,7 @@ class BasePlugin:
            Domoticz.Debug(str(e))
            return True     
          
-        #------------------ SDC ----------------------------------------------
+        #------------------ MAIN ----------------------------------------------
         #---------------------------------------------------------------------
         if ( (mqttpath[0] == self.base_topic) and (mqttpath[1] == 'main') ):
          #Domoticz.Debug("MQTT main message: " + topic + " " + str(message))
@@ -404,6 +423,8 @@ class BasePlugin:
            iUnit = createDevice(unitname, "selSwitch")  
           elif ( unitname in self.text_devices ):
            iUnit = createDevice(unitname, "Text")            
+          elif ( unitname in self.alert_devices ):
+           iUnit = createDevice(unitname, "Alert")
           elif ( unitname == "Pump_Flow" ):
            iUnit = createDevice(unitname, "Flow")
           elif ( unitname == "Compressor_Current" ):
@@ -413,6 +434,32 @@ class BasePlugin:
            
           if iUnit<0:
            return False           
+         
+         # ------------------  Defrost Counter------------------------------------
+         # ----------------------------------------------------------------------- 
+         if ( ( unitname == "Defrosting_State" ) ):        
+          try:
+            scmd = str(message).strip().lower()                        
+            curval = ("0", "1") [(Devices[iUnit].sValue)=="On"]
+            Domoticz.Debug("Heatpump_State=" + unitname + ' | ' + scmd + ' | ' + str(curval) )
+            if (curval != scmd):            
+             if (scmd == "1"): 
+              try:
+                iUnit2 = getDevice("Defrost_Counter")
+                curval = int(Devices[iUnit2].sValue)
+              except:
+                curval = 0
+             
+              try:               
+                curval = curval + 1                              
+                Devices[iUnit2].Update(nValue=0,sValue=str(curval))                             
+                Domoticz.Debug("Changed --> Heatpump_State=" + unitname + ' | ' + scmd + "iUnit2=" + str(iUnit2) + " | curval=" + str(curval))  
+              except Exception as e:
+                Domoticz.Debug(str(e))
+                
+          except Exception as e:
+            Domoticz.Debug(str(e))
+            return False      
          
          #------------------ Temp ---------------------------------------------
          #---------------------------------------------------------------------
@@ -439,7 +486,7 @@ class BasePlugin:
              if (scmd == "1"): # set device status if needed
               Devices[iUnit].Update(nValue=1,sValue="On")
              else:
-              Devices[iUnit].Update(nValue=0,sValue="Off")
+              Devices[iUnit].Update(nValue=0,sValue="Off")  
           except Exception as e:
             Domoticz.Debug(str(e))
             return False
@@ -448,7 +495,7 @@ class BasePlugin:
          #-----------------------------------------------------------------------
          
          if ( ( unitname in self.sel_switch_devices ) or ( unitname in self.command_sel_devices ) ): 
-          Domoticz.Debug("selSw=" + unitname + '=' + message)
+          #Domoticz.Debug("selSw=" + unitname + '=' + message)
           try:
            if (int(message) >= 0):
             scmd = int(message) * 10            
@@ -484,48 +531,64 @@ class BasePlugin:
           try: 
            calcCOP(unitname)  
           except Exception as e:
-           Domoticz.Debug(str(e))            
-         
-         # ------------------ Pump_Flow-------------------------------------------
-         # -----------------------------------------------------------------------
-         if ( unitname == "Pump_Flow"):
-        
-          try:
-           mval = float(message)
-          except:
-           mval = str(message).strip()
-          
-          try:
-            Devices[iUnit].Update(nValue=0,sValue=str(mval))
-          except Exception as e:
-            Domoticz.Debug(str(e))            
+           Domoticz.Debug(str(e))                     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
          # ------------------ Speed | Pressue | Counter |  -----------------------
          # -----------------------------------------------------------------------
-         if ( (unitname in self.speed_devices) or (unitname in self.pressure_devices) or (unitname in self.counter_devices) or (unitname in self.kelvin_devices) or (unitname == "Compressor_Current") or (unitname == "Compressor_Freq") ):
+         if ( (unitname in self.speed_devices) or (unitname in self.pressure_devices) or (unitname in self.counter_devices) or (unitname in self.kelvin_devices) or (unitname == "Compressor_Current") or (unitname == "Compressor_Freq") or ( unitname == "Pump_Flow") ):
           try:
            mval = int(message)
           except:
-           mval = str(message).strip()
-           
+           mval = str(message).strip()           
+
           try:         
            Devices[iUnit].Update(nValue=0,sValue=str(mval))
           except Exception as e:
             Domoticz.Debug(str(e))            
-            
+
          # ------------------  Text  ---------------------------------------------
          # -----------------------------------------------------------------------
          if (unitname in self.text_devices):
           try:
            mval = int(message)
           except:
-           mval = str(message).strip()
-           
+           mval = str(message).strip()           
+
           try:         
            Devices[iUnit].Update(nValue=0,sValue=str(mval))
           except Exception as e:
-            Domoticz.Debug(str(e))                    
+            Domoticz.Debug(str(e))                               
+          
             
+                              
+ 
+         # ------------------  Alert ---------------------------------------------
+         # -----------------------------------------------------------------------
+         if (unitname in self.alert_devices):
+          try:
+           mval = int(message)
+          except:
+           mval = str(message).strip()           
+
+          try:         
+           Devices[iUnit].Update(nValue=0,sValue=str(mval))
+          except Exception as e:
+            Domoticz.Debug(str(e))            
+
 global _plugin
 _plugin = BasePlugin()
 
