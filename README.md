@@ -46,6 +46,14 @@ SetZones                        Set zones to active  0 = zone 1 active, 1 = zone
 - Add influxDB support
 - SetPump / SetPumpSpeed / SetCurves / SetFloorHeatDelta / SetFloorCoolDelta / SetDWHHeatDelta
 
+# Common problems:
+If you don't see the heishamon values in domoticz after enabling the plugin there are a few things you should check:
+- Is heishamon receiving values from heatpump? (see heishamon webpage)
+- Is heishamon correctly sending messages to mqtt broker? (see message in mqtt broker, for example with MQTT explorer)
+- Is domoticz plugin correctly configured to point to the mqtt broker?
+- Is 'allow new devices' enabled in domoticz?
+- Do you have the most recent version of Heishamon firmware? (at least v1.0 is needed for plugin version 0.1.8 and up)
+
 
 # History
 ```
