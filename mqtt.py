@@ -154,7 +154,7 @@ class MqttClientSH2:
             return
 
         topic = Data['Topic'] if 'Topic' in Data else ''
-        payload =  Data['Payload'].decode('utf8') if 'Payload' in Data else ''
+        payload =  Data['Payload'].decode('latin-1') if 'Payload' in Data else ''
 
         if Data['Verb'] == "CONNACK":
             self.isConnected = True

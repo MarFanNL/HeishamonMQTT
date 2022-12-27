@@ -93,7 +93,11 @@ def getSelCommand(pUnitname):
         "Z2_Cool_Request_Temp": "SetZ2CoolRequestTemperature", 
         "DHW_Target_Temp": "SetDHWTemp",
         "Zones_State": "SetZones" ,
-        "Holiday_Mode_State": "SetHolidayMode"
+        "Holiday_Mode_State": "SetHolidayMode",
+        "Max_Pump_Duty": "SetMaxPumpDuty",
+        "Cool_Delta": "SetFloorCoolDelta",
+        "DHW_Heat_Delta": "SetDHWHeatDelta",
+        "Heat_Delta": "SetFloorHeatDelta"
         }
     return Switcher.get(pUnitname, "")
     
@@ -107,7 +111,7 @@ def getSelSwitchLevelNames(pUnitname):
         "Holiday_Mode_State": "Off|Scheduled|Active",
         "Cooling_Mode": "Curve|Direct",
         "Heating_Mode": "Curve|Direct",
-        "Zones_State": "Zone 1|Zone 2|Zone 1+2"
+        "Zones_State": "Zone 1|Zone 2|Zone 1+2",
         }
     return Switcher.get(pUnitname, "")
 
@@ -121,7 +125,7 @@ def getSelSwitchImage(pUnitname):
         "Holiday_Mode_State": 19,
         "Cooling_Mode": 16,
         "Heating_Mode": 15,
-         "Zones_State": 0    
+        "Zones_State": 0
         }
     return Switcher.get(pUnitname, "")
     
@@ -159,9 +163,7 @@ def createDevice(pUnitname, pTypeName, pOptions=''):
      Domoticz.Device(Name=pUnitname, Unit=iUnit, Type=243, Subtype=31, Used=0, Options={"Custom": "1;COP"}, DeviceID=pUnitname).Create() # create COP    
   elif (pTypeName=="Pressure"):          
      Domoticz.Device(Name=pUnitname, Unit=iUnit, Type=243, Subtype=9, Used=0, DeviceID=pUnitname).Create() # create Pressure counter  
-  elif (pTypeName=="Kelvin"):     
-     Domoticz.Device(Name=pUnitname, Unit=iUnit, Type=243, Subtype=31, Used=0, Options={"Custom": "1;K"},  DeviceID=pUnitname).Create() # create Kelvin counter  
-  elif (pTypeName=="Flow"):     
+  elif (pTypeName=="Flow"):
      Domoticz.Device(Name=pUnitname, Unit=iUnit, Type=243, Subtype=30, Used=0, DeviceID=pUnitname).Create() # create Flow counter
   elif (pTypeName=="Current"):     
      Domoticz.Device(Name=pUnitname, Unit=iUnit, Type=243, Subtype=23, Used=0, DeviceID=pUnitname).Create() # 
@@ -181,7 +183,8 @@ def createDevice(pUnitname, pTypeName, pOptions=''):
 class BasePlugin:
     mqttClient = None
     
-    thermostat_devices = ["Z1_Heat_Request_Temp", "Z1_Cool_Request_Temp", "Z2_Heat_Request_Temp", "Z2_Cool_Request_Temp", "DHW_Target_Temp"]
+    thermostat_devices = ["Z1_Heat_Request_Temp", "Z1_Cool_Request_Temp", "Z2_Heat_Request_Temp", "Z2_Cool_Request_Temp", "DHW_Target_Temp", "Max_Pump_Duty", "Cool_Delta", "DHW_Heat_Delta", "Heat_Delta"]
+    curve_devices = ["Z1_Heat_Curve_Target_High_Temp","Z1_Heat_Curve_Target_Low_Temp","Z1_Heat_Curve_Outside_High_Temp","Z1_Heat_Curve_Outside_Low_Temp","Z2_Heat_Curve_Target_High_Temp","Z2_Heat_Curve_Target_Low_Temp","Z2_Heat_Curve_Outside_High_Temp","Z2_Heat_Curve_Outside_Low_Temp","Z1_Cool_Curve_Target_High_Temp","Z1_Cool_Curve_Target_Low_Temp","Z1_Cool_Curve_Outside_High_Temp","Z1_Cool_Curve_Outside_Low_Temp","Z2_Cool_Curve_Target_High_Temp","Z2_Cool_Curve_Target_Low_Temp","Z2_Cool_Curve_Outside_High_Temp","Z2_Cool_Curve_Outside_Low_Temp"]
     switch_devices = ["Quiet_Mode_Schedule", "Main_Schedule_State", "Force_Heater_State", "DHW_Heater_State", "Room_Heater_State", "External_Heater_State", "Internal_Heater_State"]
     command_switch_devices = ["Heatpump_State", "Defrosting_State", "Sterilization_State", "Holiday_Mode_State"]
     command_sel_devices = ["Force_DHW_State", "Quiet_Mode_Level", "Powerful_Mode_Time", "Operating_Mode_State", "Zones_State"]     
@@ -189,8 +192,7 @@ class BasePlugin:
     kWh_devices =["Cool_Energy_Consumption", "Cool_Energy_Production", "DHW_Energy_Consumption", "DHW_Energy_Production", "Heat_Energy_Consumption", "Heat_Energy_Production"]
     counter_devices = ["Operations_Counter", "Operations_Hours", "DHW_Heater_Operations_Hours", "Room_Heater_Operations_Hours", "Sterilization_Max_Time", "Pump_Duty", "Defrost_Counter"] 
     speed_devices = ["Pump_Speed", "Fan1_Motor_Speed", "Fan2_Motor_Speed"]   
-    pressure_devices = ["Low_Pressure", "High_Pressure"]   
-    kelvin_devices = ["Cool_Delta", "DHW_Heat_Delta", "Heat_Delta"]
+    pressure_devices = ["Low_Pressure", "High_Pressure"]
     text_devices = ["Heat_Pump_Model"]
     alert_devices = ["Error"]
     COP_devices = ["Cool_Energy_COP", "DHW_Energy_COP", "Heat_Energy_COP"]
@@ -266,7 +268,21 @@ class BasePlugin:
             self.mqttClient.publish(mqttpath, str(Level) )
          except Exception as e:
           Domoticz.Debug(str(e))
-          return False         
+          return False
+
+        if (devname in self.curve_devices ):
+            try:
+                curves = devname.lower().split('_')
+                if (curves[0] == "z1"):
+                    zone = "zone1"
+                else:
+                    zone = "zone2"
+                mqttpath = self.base_topic+"/commands/SetCurves"
+                json = "{\"" + zone + "\":{\"" + curves[1] + "\":{\"" + curves[3] + "\":{\"" + curves[4] + "\":" + str(Level) + "}}}}"
+                self.mqttClient.publish(mqttpath, json )
+            except Exception as e:
+                Domoticz.Debug(str(e))
+                return False
 
         if (devname in self.command_switch_devices ):
          try: 
@@ -401,6 +417,8 @@ class BasePlugin:
          if iUnit<0: # if device does not exists in Domoticz, than create it
           if ( unitname in self.thermostat_devices ):
            iUnit = createDevice(unitname, "Thermostat")  #always before _Temp
+          elif (unitname in self.curve_devices ):
+           iUnit = createDevice(unitname, "Thermostat")
           elif ( "_Temp" in unitname ):
            iUnit = createDevice(unitname, "Temperature")
           elif ( unitname in self.switch_devices ):
@@ -415,8 +433,6 @@ class BasePlugin:
            iUnit = createDevice(unitname, "Speed")
           elif ( unitname in self.pressure_devices ):
            iUnit = createDevice(unitname, "Pressure")
-          elif ( unitname in self.kelvin_devices ):
-           iUnit = createDevice(unitname, "Kelvin")
           elif ( unitname in self.sel_switch_devices ):
            iUnit = createDevice(unitname, "selSwitch")           
           elif ( unitname in self.command_sel_devices ):
@@ -463,7 +479,7 @@ class BasePlugin:
          
          #------------------ Temp ---------------------------------------------
          #---------------------------------------------------------------------
-         if ( "_Temp" in unitname ):
+         if ( ("_Temp" in unitname ) or ( unitname in self.thermostat_devices )):
           try:
            curval = Devices[iUnit].sValue
           except:
@@ -549,7 +565,7 @@ class BasePlugin:
 
          # ------------------ Speed | Pressue | Counter |  -----------------------
          # -----------------------------------------------------------------------
-         if ( (unitname in self.speed_devices) or (unitname in self.pressure_devices) or (unitname in self.counter_devices) or (unitname in self.kelvin_devices) or (unitname == "Compressor_Current") or (unitname == "Compressor_Freq") or ( unitname == "Pump_Flow") ):
+         if ( (unitname in self.speed_devices) or (unitname in self.pressure_devices) or (unitname in self.counter_devices) or (unitname == "Compressor_Current") or (unitname == "Compressor_Freq") or ( unitname == "Pump_Flow") ):
           try:
            mval = int(message)
           except:
