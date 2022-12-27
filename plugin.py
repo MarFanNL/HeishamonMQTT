@@ -111,7 +111,7 @@ def getSelSwitchLevelNames(pUnitname):
         "Holiday_Mode_State": "Off|Scheduled|Active",
         "Cooling_Mode": "Curve|Direct",
         "Heating_Mode": "Curve|Direct",
-        "Zones_State": "Zone 1|Zone 2|Zone 1+2",
+        "Zones_State": "Zone 1|Zone 2|Zone 1+2"
         }
     return Switcher.get(pUnitname, "")
 
