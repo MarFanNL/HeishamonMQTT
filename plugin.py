@@ -564,7 +564,7 @@ class BasePlugin:
            mval = str(message).strip()           
 
           try:
-           if (curval != str(mval)):
+           if (curval != ""):
             Devices[iUnit].Update(nValue=0,sValue=str(mval))
           except Exception as e:
             Domoticz.Info(str(e))
