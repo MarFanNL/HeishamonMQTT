@@ -104,7 +104,6 @@ def getSelCommand(pUnitname):
 def getSelSwitchLevelNames(pUnitname):
     Switcher={
         "Quiet_Mode_Level": "Off|Silent 1|Silent 2|Silent 3",
-        "Force_DHW_State": "Off|On",
         "Powerful_Mode_Time": "Off|30 Min|60 Min|90 Min",
         "Operating_Mode_State": "Heat only|Cool only|Auto|DHW only|Heat+DHW|Cool+DHW|Auto+DHW",
         "ThreeWay_Valve_State": "Room|DHW",
@@ -186,9 +185,9 @@ class BasePlugin:
     thermostat_devices = ["Z1_Heat_Request_Temp", "Z1_Cool_Request_Temp", "Z2_Heat_Request_Temp", "Z2_Cool_Request_Temp", "DHW_Target_Temp", "Max_Pump_Duty", "Cool_Delta", "DHW_Heat_Delta", "Heat_Delta"]
     curve_devices = ["Z1_Heat_Curve_Target_High_Temp","Z1_Heat_Curve_Target_Low_Temp","Z1_Heat_Curve_Outside_High_Temp","Z1_Heat_Curve_Outside_Low_Temp","Z2_Heat_Curve_Target_High_Temp","Z2_Heat_Curve_Target_Low_Temp","Z2_Heat_Curve_Outside_High_Temp","Z2_Heat_Curve_Outside_Low_Temp","Z1_Cool_Curve_Target_High_Temp","Z1_Cool_Curve_Target_Low_Temp","Z1_Cool_Curve_Outside_High_Temp","Z1_Cool_Curve_Outside_Low_Temp","Z2_Cool_Curve_Target_High_Temp","Z2_Cool_Curve_Target_Low_Temp","Z2_Cool_Curve_Outside_High_Temp","Z2_Cool_Curve_Outside_Low_Temp"]
     switch_devices = ["Quiet_Mode_Schedule", "Main_Schedule_State", "Force_Heater_State", "DHW_Heater_State", "Room_Heater_State", "External_Heater_State", "Internal_Heater_State"]
-    command_switch_devices = ["Heatpump_State", "Defrosting_State", "Sterilization_State", "Holiday_Mode_State"]
-    command_sel_devices = ["Force_DHW_State", "Quiet_Mode_Level", "Powerful_Mode_Time", "Operating_Mode_State", "Zones_State"]     
-    sel_switch_devices = [ "ThreeWay_Valve_State", "Holiday_Mode_State", "Cooling_Mode","Heating_Mode"]       
+    command_switch_devices = ["Heatpump_State", "Defrosting_State", "Sterilization_State", "Force_DHW_State"]
+    command_sel_devices = ["Quiet_Mode_Level", "Powerful_Mode_Time", "Operating_Mode_State", "Zones_State", "Holiday_Mode_State"]     
+    sel_switch_devices = [ "ThreeWay_Valve_State", "Cooling_Mode","Heating_Mode"]       
     kWh_devices =["Cool_Energy_Consumption", "Cool_Energy_Production", "DHW_Energy_Consumption", "DHW_Energy_Production", "Heat_Energy_Consumption", "Heat_Energy_Production"]
     counter_devices = ["Operations_Counter", "Operations_Hours", "DHW_Heater_Operations_Hours", "Room_Heater_Operations_Hours", "Sterilization_Max_Time", "Pump_Duty", "Defrost_Counter"] 
     speed_devices = ["Pump_Speed", "Fan1_Motor_Speed", "Fan2_Motor_Speed"]   
@@ -254,9 +253,12 @@ class BasePlugin:
         Domoticz.Debug("DevName: " + devname + " Command: " + Command + " " + str(Level) )                       
 
         if ( devname in self.command_sel_devices ):
-         try:           
+         try:
+            if(devname == "Holiday_Mode_State" and Level == 20):
+                cmd = 1
+            else:
             cmd = int(Level / 10)
-            mqttpath = self.base_topic+"/commands/" + getSelCommand(devname)         
+            mqttpath = self.base_topic+"/commands/" + getSelCommand(devname)
             self.mqttClient.publish(mqttpath, str(cmd) )
          except Exception as e:
           Domoticz.Debug(str(e))
@@ -289,7 +291,7 @@ class BasePlugin:
             if (Command == 'Off'):
              Level = 0
             else:
-             Level = 1          
+             Level = 1
             mqttpath = self.base_topic + "/commands/" + getSelCommand(devname)         
             self.mqttClient.publish(mqttpath, str(Level) )
          except Exception as e:
@@ -491,9 +493,6 @@ class BasePlugin:
           try:
            if (curval != str(mval)):
             Devices[iUnit].Update(nValue=0,sValue=str(mval))
-            Domoticz.Debug(Devices[iUnit].Name + curval + " is different than " + str(mval))
-           else:
-            Domoticz.Debug(Devices[iUnit].Name + curval + " is not different than " + str(mval))
           except Exception as e:
             Domoticz.Debug(str(e))
 
@@ -506,7 +505,7 @@ class BasePlugin:
              if (scmd == "1"): # set device status if needed
               Devices[iUnit].Update(nValue=1,sValue="On")
              else:
-              Devices[iUnit].Update(nValue=0,sValue="Off")  
+              Devices[iUnit].Update(nValue=0,sValue="Off")
           except Exception as e:
             Domoticz.Debug(str(e))
             return False
@@ -519,7 +518,7 @@ class BasePlugin:
           try:
            if (int(message) >= 0):
             scmd = int(message) * 10            
-            if (str(Devices[iUnit].nValue).lower() != scmd):              
+            if (str(Devices[iUnit].sValue).lower() != str(scmd)):
              Devices[iUnit].Update(nValue=2,sValue=str(scmd))
           except Exception as e:
             Domoticz.Debug(str(e))
@@ -543,7 +542,7 @@ class BasePlugin:
            sval = ""
           sval = str(mval)+";"+str(prevdata[1])
           try:
-           if sval!="":
+           if (curval != sval):
             Devices[iUnit].Update(nValue=0,sValue=str(sval))
           except Exception as e:
            Domoticz.Debug(str(e))
@@ -567,10 +566,7 @@ class BasePlugin:
 
           try:
            if (curval != str(mval)):
-            Domoticz.Debug(Devices[iUnit].Name + curval + " is different than " + str(mval))
             Devices[iUnit].Update(nValue=0,sValue=str(mval))
-           else:
-            Domoticz.Debug(Devices[iUnit].Name + curval + " is not different than " + str(mval))
           except Exception as e:
             Domoticz.Info(str(e))
 
@@ -582,14 +578,12 @@ class BasePlugin:
           except:
            mval = str(message).strip()           
 
-          try:         
-           Devices[iUnit].Update(nValue=0,sValue=str(mval))
+          try:
+           if (Devices[iUnit].sValue != str(mval)):
+            Devices[iUnit].Update(nValue=0,sValue=str(mval))
           except Exception as e:
             Domoticz.Debug(str(e))                               
           
-            
-                              
- 
          # ------------------  Alert ---------------------------------------------
          # -----------------------------------------------------------------------
          if (unitname in self.alert_devices):
@@ -598,8 +592,9 @@ class BasePlugin:
           except:
            mval = str(message).strip()           
 
-          try:         
-           Devices[iUnit].Update(nValue=0,sValue=str(mval))
+          try:
+           if (Devices[iUnit].sValue != str(mval)):
+            Devices[iUnit].Update(nValue=0,sValue=str(mval))
           except Exception as e:
             Domoticz.Debug(str(e))            
 
