@@ -107,7 +107,7 @@ def getSelSwitchLevelNames(pUnitname):
         "Force_DHW_State": "Off|On",
         "Powerful_Mode_Time": "Off|30 Min|60 Min|90 Min",
         "Operating_Mode_State": "Heat only|Cool only|Auto|DHW only|Heat+DHW|Cool+DHW|Auto+DHW",
-        "ThreeWay_Valve_State": "Room|DWH",
+        "ThreeWay_Valve_State": "Room|DHW",
         "Holiday_Mode_State": "Off|Scheduled|Active",
         "Cooling_Mode": "Curve|Direct",
         "Heating_Mode": "Curve|Direct",
@@ -489,10 +489,14 @@ class BasePlugin:
           except:
            mval = str(message).strip()
           try:
+           if (curval != str(mval)):
             Devices[iUnit].Update(nValue=0,sValue=str(mval))
+            Domoticz.Debug(Devices[iUnit].Name + curval + " is different than " + str(mval))
+           else:
+            Domoticz.Debug(Devices[iUnit].Name + curval + " is not different than " + str(mval))
           except Exception as e:
             Domoticz.Debug(str(e))
-            
+
          #------------------ Switch ---------------------------------------------
          #-----------------------------------------------------------------------
          if ( ( unitname in self.switch_devices ) or ( unitname in self.command_switch_devices ) ):        
@@ -549,32 +553,26 @@ class BasePlugin:
           except Exception as e:
            Domoticz.Debug(str(e))                     
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-         # ------------------ Speed | Pressue | Counter |  -----------------------
+         # ------------------ Speed | Pressure | Counter |  -----------------------
          # -----------------------------------------------------------------------
          if ( (unitname in self.speed_devices) or (unitname in self.pressure_devices) or (unitname in self.counter_devices) or (unitname == "Compressor_Current") or (unitname == "Compressor_Freq") or ( unitname == "Pump_Flow") ):
+          try:
+           curval = Devices[iUnit].sValue
+          except:
+           curval = 0
           try:
            mval = int(message)
           except:
            mval = str(message).strip()           
 
-          try:         
-           Devices[iUnit].Update(nValue=0,sValue=str(mval))
+          try:
+           if (curval != str(mval)):
+            Domoticz.Debug(Devices[iUnit].Name + curval + " is different than " + str(mval))
+            Devices[iUnit].Update(nValue=0,sValue=str(mval))
+           else:
+            Domoticz.Debug(Devices[iUnit].Name + curval + " is not different than " + str(mval))
           except Exception as e:
-            Domoticz.Debug(str(e))            
+            Domoticz.Info(str(e))
 
          # ------------------  Text  ---------------------------------------------
          # -----------------------------------------------------------------------
