@@ -257,7 +257,7 @@ class BasePlugin:
             if(devname == "Holiday_Mode_State" and Level == 20):
                 cmd = 1
             else:
-            cmd = int(Level / 10)
+                cmd = int(Level / 10)
             mqttpath = self.base_topic+"/commands/" + getSelCommand(devname)
             self.mqttClient.publish(mqttpath, str(cmd) )
          except Exception as e:
@@ -491,10 +491,9 @@ class BasePlugin:
           except:
            mval = str(message).strip()
           try:
-           if (curval != str(mval)):
-            Devices[iUnit].Update(nValue=0,sValue=str(mval))
+           Devices[iUnit].Update(nValue=0,sValue=str(mval))
           except Exception as e:
-            Domoticz.Debug(str(e))
+           Domoticz.Debug(str(e))
 
          #------------------ Switch ---------------------------------------------
          #-----------------------------------------------------------------------
