@@ -164,6 +164,8 @@ def createDevice(pUnitname, pTypeName, pOptions=''):
      Domoticz.Device(Name=pUnitname, Unit=iUnit, Type=243, Subtype=9, Used=0, DeviceID=pUnitname).Create() # create Pressure counter  
   elif (pTypeName=="Flow"):
      Domoticz.Device(Name=pUnitname, Unit=iUnit, Type=243, Subtype=30, Used=0, DeviceID=pUnitname).Create() # create Flow counter
+  elif (pTypeName=="Watt"):
+      Domoticz.Device(Name=pUnitname, Unit=iUnit, Type=248, Subtype=1, Used=0, DeviceID=pUnitname).Create() # create Electric usage device
   elif (pTypeName=="Current"):     
      Domoticz.Device(Name=pUnitname, Unit=iUnit, Type=243, Subtype=23, Used=0, DeviceID=pUnitname).Create() # 
   elif (pTypeName=="Freq"):     
@@ -188,7 +190,7 @@ class BasePlugin:
     command_switch_devices = ["Heatpump_State", "Defrosting_State", "Sterilization_State", "Force_DHW_State"]
     command_sel_devices = ["Quiet_Mode_Level", "Powerful_Mode_Time", "Operating_Mode_State", "Zones_State", "Holiday_Mode_State"]     
     sel_switch_devices = [ "ThreeWay_Valve_State", "Cooling_Mode","Heating_Mode"]       
-    kWh_devices =["Cool_Energy_Consumption", "Cool_Energy_Production", "DHW_Energy_Consumption", "DHW_Energy_Production", "Heat_Energy_Consumption", "Heat_Energy_Production"]
+    watt_devices =["Cool_Energy_Consumption", "Cool_Energy_Production", "DHW_Energy_Consumption", "DHW_Energy_Production", "Heat_Energy_Consumption", "Heat_Energy_Production"]
     counter_devices = ["Operations_Counter", "Operations_Hours", "DHW_Heater_Operations_Hours", "Room_Heater_Operations_Hours", "Sterilization_Max_Time", "Pump_Duty", "Defrost_Counter"] 
     speed_devices = ["Pump_Speed", "Fan1_Motor_Speed", "Fan2_Motor_Speed"]   
     pressure_devices = ["Low_Pressure", "High_Pressure"]
@@ -427,8 +429,8 @@ class BasePlugin:
            iUnit = createDevice(unitname, "Switch")
           elif ( unitname in self.command_switch_devices ):
            iUnit = createDevice(unitname, "Switch")          
-          elif ( unitname in self.kWh_devices ):
-           iUnit = createDevice(unitname, "kWh")
+          elif ( unitname in self.watt_devices ):
+           iUnit = createDevice(unitname, "Watt")
           elif ( unitname in self.counter_devices ):
            iUnit = createDevice(unitname, "Counter")
           elif ( unitname in self.speed_devices ):
@@ -481,7 +483,7 @@ class BasePlugin:
          
          #------------------ Temp ---------------------------------------------
          #---------------------------------------------------------------------
-         if ( ("_Temp" in unitname ) or ( unitname in self.thermostat_devices )):
+         if ( ("_Temp" in unitname ) or ( unitname in self.thermostat_devices ) or ( unitname in self.curve_devices )):
           try:
            curval = Devices[iUnit].sValue
           except:
@@ -491,9 +493,10 @@ class BasePlugin:
           except:
            mval = str(message).strip()
           try:
-           Devices[iUnit].Update(nValue=0,sValue=str(mval))
+           if ( (( unitname not in self.thermostat_devices ) and ( unitname not in self.curve_devices )) or ( str(mval) != curval )):
+            Devices[iUnit].Update(nValue=0,sValue=str(mval))
           except Exception as e:
-           Domoticz.Debug(str(e))
+           Domoticz.Debug(str(e))  
 
          #------------------ Switch ---------------------------------------------
          #-----------------------------------------------------------------------
@@ -523,26 +526,25 @@ class BasePlugin:
             Domoticz.Debug(str(e))
             return False
             
-         #------------------ kWh ------------------------------------------------
+         #------------------ Watt ------------------------------------------------
          #-----------------------------------------------------------------------
-         if ( unitname in self.kWh_devices ):
+         if ( unitname in self.watt_devices ):
           try:
            curval = Devices[iUnit].sValue
            prevdata = curval.split(";")
           except:
            prevdata = []
-          if len(prevdata)<2:
-           prevdata.append(0)
-           prevdata.append(0)
+          if len(prevdata)==2: ## If device is old, recreate it to a Electric Usage device
+           pUnitname = Devices[iUnit].DeviceID
+           Devices[iUnit].Delete()
+           Domoticz.Device(Name=pUnitname, Unit=iUnit, Type=248, Subtype=1, Used=0, DeviceID=pUnitname).Create()
           try:
            mval = float(str(message).strip())
           except:
            mval = str(message).strip()
-           sval = ""
-          sval = str(mval)+";"+str(prevdata[1])
           try:
-           if (curval != sval):
-            Devices[iUnit].Update(nValue=0,sValue=str(sval))
+           if (curval != mval):
+            Devices[iUnit].Update(nValue=0,sValue=str(mval))
           except Exception as e:
            Domoticz.Debug(str(e))
            return True     
@@ -564,7 +566,7 @@ class BasePlugin:
            mval = str(message).strip()           
 
           try:
-           if (curval != ""):
+           if (curval != str(mval)):
             Devices[iUnit].Update(nValue=0,sValue=str(mval))
           except Exception as e:
             Domoticz.Info(str(e))
