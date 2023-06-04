@@ -97,7 +97,8 @@ def getSelCommand(pUnitname):
         "Max_Pump_Duty": "SetMaxPumpDuty",
         "Cool_Delta": "SetFloorCoolDelta",
         "DHW_Heat_Delta": "SetDHWHeatDelta",
-        "Heat_Delta": "SetFloorHeatDelta"
+        "Heat_Delta": "SetFloorHeatDelta",
+        "Pump_Service_Mode": "SetPump"
         }
     return Switcher.get(pUnitname, "")
     
@@ -187,7 +188,7 @@ class BasePlugin:
     thermostat_devices = ["Z1_Heat_Request_Temp", "Z1_Cool_Request_Temp", "Z2_Heat_Request_Temp", "Z2_Cool_Request_Temp", "DHW_Target_Temp", "Max_Pump_Duty", "Cool_Delta", "DHW_Heat_Delta", "Heat_Delta"]
     curve_devices = ["Z1_Heat_Curve_Target_High_Temp","Z1_Heat_Curve_Target_Low_Temp","Z1_Heat_Curve_Outside_High_Temp","Z1_Heat_Curve_Outside_Low_Temp","Z2_Heat_Curve_Target_High_Temp","Z2_Heat_Curve_Target_Low_Temp","Z2_Heat_Curve_Outside_High_Temp","Z2_Heat_Curve_Outside_Low_Temp","Z1_Cool_Curve_Target_High_Temp","Z1_Cool_Curve_Target_Low_Temp","Z1_Cool_Curve_Outside_High_Temp","Z1_Cool_Curve_Outside_Low_Temp","Z2_Cool_Curve_Target_High_Temp","Z2_Cool_Curve_Target_Low_Temp","Z2_Cool_Curve_Outside_High_Temp","Z2_Cool_Curve_Outside_Low_Temp"]
     switch_devices = ["Quiet_Mode_Schedule", "Main_Schedule_State", "Force_Heater_State", "DHW_Heater_State", "Room_Heater_State", "External_Heater_State", "Internal_Heater_State"]
-    command_switch_devices = ["Heatpump_State", "Defrosting_State", "Sterilization_State", "Force_DHW_State"]
+    command_switch_devices = ["Heatpump_State", "Defrosting_State", "Sterilization_State", "Force_DHW_State", "Pump_Service_Mode"]
     command_sel_devices = ["Quiet_Mode_Level", "Powerful_Mode_Time", "Operating_Mode_State", "Zones_State", "Holiday_Mode_State"]     
     sel_switch_devices = [ "ThreeWay_Valve_State", "Cooling_Mode","Heating_Mode"]       
     watt_devices =["Cool_Energy_Consumption", "Cool_Energy_Production", "DHW_Energy_Consumption", "DHW_Energy_Production", "Heat_Energy_Consumption", "Heat_Energy_Production"]
@@ -221,13 +222,18 @@ class BasePlugin:
         for dev in self.COP_devices:
          iUnit = getDevice(dev)         
          if iUnit<0: # if device does not exists in Domoticz, than create it
-          iUnit = createDevice(dev, "COP")  
-        
+          iUnit = createDevice(dev, "COP")
+
         iUnit = getDevice('Defrost_Counter')         
         if iUnit<0: # if device does not exists in Domoticz, than create it
          iUnit = createDevice('Defrost_Counter', "Counter")  
-        Devices[iUnit].Update(nValue=0,sValue=str(0))   
-        
+        Devices[iUnit].Update(nValue=0,sValue=str(0))
+
+        iUnit = getDevice('Pump_Service_Mode')
+        if iUnit<0: # if device does not exists in Domoticz, than create it
+         iUnit = createDevice('Pump_Service_Mode', "Switch")
+         Devices[iUnit].Update(nValue=0,sValue="Off")
+
       except Exception as e:
         Domoticz.Error("MQTT client start error: "+str(e))
         self.mqttClient = None
@@ -296,6 +302,8 @@ class BasePlugin:
              Level = 1
             mqttpath = self.base_topic + "/commands/" + getSelCommand(devname)         
             self.mqttClient.publish(mqttpath, str(Level) )
+            if (devname == "Pump_Service_Mode"):
+             Devices[Unit].Update(nValue=Level,sValue=Command)
          except Exception as e:
           Domoticz.Debug(str(e))
           return False         
@@ -454,7 +462,7 @@ class BasePlugin:
            
           if iUnit<0:
            return False           
-         
+
          # ------------------  Defrost Counter------------------------------------
          # ----------------------------------------------------------------------- 
          if ( ( unitname == "Defrosting_State" ) ):        
